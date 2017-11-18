@@ -1,0 +1,3 @@
+Running test no_log ... 
+  key/output.txt exists but log/output.txt does not
+Failed

@@ -1,0 +1,3 @@
+This directory contains tests that fail
+
+tests/passes/failures contains a script that ensures that a "passing" test folder exists for every other "failing" test in this folder

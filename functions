@@ -1,0 +1,208 @@
+fkeep_config_file=fkeep.config
+
+rval_skipTest=50
+
+errorMessage() {
+	echo "${red}ERROR${normal}: $1"
+
+	if [[ -z "$2" ]]; then
+		exit 1
+	fi
+}
+
+printUsageSelf() {
+	echo "<not defined>"
+}
+
+printUsage() {
+	if [[ ! -z "$1" ]]; then
+		errorMessage "$1" noExit
+	fi
+
+	echo -n "Usage: "
+	printUsageSelf
+	exit 1
+
+}
+
+process_args() {
+	while [[ $# -gt 0 ]]; do
+		case $1 in
+			-d)
+				singleTest=1
+				;;
+			*)
+				printUsage "Invalid argument: $1"
+				;;
+		esac
+		shift 1
+	done
+}
+
+testable_folder() {
+	if [[ -x fkeep.sh ]]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+config_line() {
+	case "$1" in
+		"[skip]")
+			skipTest=1
+			;;
+		*)
+			echo "cfg> $@"
+			;;
+	esac
+}
+
+read_config() {
+	if [[ -f $fkeep_config_file ]]; then
+		while read inLine; do
+			config_line $inLine
+		done < $fkeep_config_file
+	fi
+}
+
+run_test() {
+	./fkeep.sh > log/fkeep.sh.log
+}
+
+compare_files() {
+	# $1) file from key/
+	# $2) file from log/
+
+	echo -n
+}
+
+compare_folders() {
+	# $1 folder 1
+	# $2 folder 2
+	echo -n
+}
+
+compare_outputs() {
+	rval=0
+	compared_files=""
+
+	if [[ -d key ]]; then
+	for file in $(find key -type f); do
+		if [[ $file =~ ^.*key/(.*)$ ]]; then
+			keyFile=${BASH_REMATCH[1]}
+			if [[ -f log/$keyFile ]]; then
+				if [[ -z "$compared_files" ]]; then
+					compared_files="$keyFile"
+				else
+					local foundItm=0
+					for itm in $compared_files; do
+						if [[ "$itm" == "$logFile" ]]; then
+							foundItm=1
+						fi
+					done
+	
+					if [[ $foundItm -eq 0 ]]; then
+						compared_files="$compared_files $keyFile"
+					fi
+				fi
+			else
+				[[ $rval -eq 0 ]] && echo
+				echo "  key/$keyFile exists but log/$keyFile does not"
+				rval=1
+			fi
+		else
+			errorMessage "key/log regex error"
+		fi
+	done
+	fi
+	
+	for file in $(find log -type f); do
+		if [[ $file =~ ^.*log/(.*)$ ]]; then
+			logFile=${BASH_REMATCH[1]}
+			if [[ -f key/$logFile ]]; then
+				if [[ -z "$compared_files" ]]; then
+					compared_files="$logFile"
+				else
+					local foundItm=0
+					for itm in $compared_files; do
+						if [[ "$itm" == "$logFile" ]]; then
+							foundItm=1
+						fi
+					done
+
+					if [[ $foundItm -eq 0 ]]; then
+						compared_files="$compared_files $logFile"
+					fi
+				fi
+			else
+				[[ $rval -eq 0 ]] && echo
+				echo "  log/$logFile exists but key/$logFile does not"
+				rval=1
+			fi
+		else
+			errorMessage "log/key regex error"
+		fi
+	done
+
+	for itm in $compared_files; do
+		diff key/$itm log/$itm > /dev/null
+		if [[ $? -ne 0 ]]; then
+			[[ $rval -eq 0 ]] && echo
+			echo "  log/$itm and key/$itm differ"
+			rval=1
+		fi
+	done
+
+	return $rval
+}
+
+prepare_folder() {
+	if [[ -d log ]]; then
+		rm -rf log
+	fi
+	mkdir -p log
+}
+
+test_dir() {
+	thisDir=$(pwd -P)
+
+	skipTest=0
+	read_config
+
+	if [[ $skipTest -eq 1 ]]; then
+		echo "${yellow}Skipped${normal} test $(basename $(pwd -P)) ... "
+		return $rval_skipTest
+	fi
+
+	if testable_folder; then
+		prepare_folder
+		echo -n "Running test $(basename $(pwd -P)) ... "
+		testStatus="${green}Passed${normal}"
+		run_test
+		rval=$?
+		if [[ $rval -ne 0 ]]; then
+			echo $rval > log/fkeep.result
+		fi
+
+		compare_outputs
+		if [[ $? -ne 0 ]]; then
+			testStatus="${red}Failed${normal}"
+		fi
+
+		echo "$testStatus"
+	fi
+
+	if [[ ! -z "$singleTest" ]]; then
+		return 0
+	fi
+
+	for dir in $(find . -type d -maxdepth 1); do
+		if [[ $dir != "." && $dir != "./log" && $dir != "./key" ]]; then
+			pushd $dir > /dev/null
+#				echo "> $(pwd -P)"
+				test_dir
+			popd > /dev/null
+		fi
+	done
+}

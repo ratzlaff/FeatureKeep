@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# output colors:
+# https://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux
+
+if [[ -t 1 ]]; then
+	export red=$(tput setaf 1)
+	export green=$(tput setaf 2)
+	export yellow=$(tput setaf 3)
+	export normal=$(tput sgr0)
+else
+	export red=
+	export green=
+	export yellow=
+	export normal=
+fi
+
+SCRIPT_HERE=$(dirname $0)
+. $SCRIPT_HERE/functions
+SCRIPT_ARGS="$@"
+
+process_args "$@"
+
+pushd "." > /dev/null
+	test_dir
+popd > /dev/null
+
