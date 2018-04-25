@@ -9,3 +9,10 @@ Installation
 2) add the directory to your PATH  
   (bash) `export PATH=~/FeatureKeep:$PATH`  
   (tcsh) `setenv PATH ~/FeatureKeep:$PATH`  
+
+Usage
+-----
+1) go to the directory containing a test
+   ~ $ cd ~/FeatureKeep/tests
+2) run `fkeep`
+   ~/FeatureKeep/tests $ fkeep

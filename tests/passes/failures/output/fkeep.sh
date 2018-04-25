@@ -1,3 +1,3 @@
 pushd ../../../fails/output > /dev/null
-	fkeep -d
+	fkeep -d --no-summary
 popd > /dev/null

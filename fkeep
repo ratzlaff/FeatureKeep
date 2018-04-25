@@ -21,7 +21,17 @@ SCRIPT_ARGS="$@"
 
 process_args "$@"
 
+read_upper_config() {
+	# Read any config file found in directories above this one
+	echo -n
+}
+
+read_upper_config
+
 pushd "." > /dev/null
-	test_dir
+	init_summary
+	test_dir $(basename $(pwd -P))
+
+	[[ -z "$noSummary" ]] && display_summary
 popd > /dev/null
 

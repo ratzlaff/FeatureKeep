@@ -31,6 +31,9 @@ process_args() {
 			-d)
 				singleTest=1
 				;;
+			--no-summary)
+				noSummary=1
+				;;
 			*)
 				printUsage "Invalid argument: $1"
 				;;
@@ -166,19 +169,20 @@ prepare_folder() {
 
 test_dir() {
 	thisDir=$(pwd -P)
+	 local testName=$1
 
 	skipTest=0
 	read_config
 
 	if [[ $skipTest -eq 1 ]]; then
-		echo "${yellow}Skipped${normal} test $(basename $(pwd -P)) ... "
+		echo "${yellow}Skipped${normal} test ${testName} ... "
+		num_skipped=$(( $num_skipped + 1 ))
 		return $rval_skipTest
 	fi
 
 	if testable_folder; then
 		prepare_folder
-		echo -n "Running test $(basename $(pwd -P)) ... "
-		testStatus="${green}Passed${normal}"
+		echo -n "Running test ${testName} ... "
 		run_test
 		rval=$?
 		if [[ $rval -ne 0 ]]; then
@@ -187,10 +191,16 @@ test_dir() {
 
 		compare_outputs
 		if [[ $? -ne 0 ]]; then
-			testStatus="${red}Failed${normal}"
+			rval=1
 		fi
 
-		echo "$testStatus"
+		if [[ $rval -ne 0 ]]; then
+			num_failed=$(( $num_failed + 1 ))
+			echo "${red}Failed${normal}"
+		else
+			num_passed=$(( $num_passed + 1 ))
+			echo "${green}Passed${normal}"
+		fi
 	fi
 
 	if [[ ! -z "$singleTest" ]]; then
@@ -201,8 +211,22 @@ test_dir() {
 		if [[ $dir != "." && $dir != "./log" && $dir != "./key" ]]; then
 			pushd $dir > /dev/null
 #				echo "> $(pwd -P)"
-				test_dir
+				test_dir ${testName}/$(basename $dir)
 			popd > /dev/null
 		fi
 	done
+}
+
+init_summary() {
+	num_passed=0
+	num_skipped=0
+	num_failed=0
+}
+
+display_summary() {
+	echo " -------- ---"
+	echo "  passed: ${green}$num_passed${normal}"
+	echo " skipped: ${yellow}$num_skipped${normal}"
+	echo "  failed: ${red}$num_failed${normal}"
+	echo "   total: $(( $num_passed + $num_skipped + $num_failed ))"
 }
