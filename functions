@@ -22,7 +22,6 @@ printUsage() {
 	echo -n "Usage: "
 	printUsageSelf
 	exit 1
-
 }
 
 process_args() {
@@ -152,7 +151,7 @@ compare_outputs() {
 		diff key/$itm log/$itm > /dev/null
 		if [[ $? -ne 0 ]]; then
 			[[ $rval -eq 0 ]] && echo
-			echo "  log/$itm and key/$itm differ"
+			echo "  files differ: log/$itm key/$itm"
 			rval=1
 		fi
 	done
