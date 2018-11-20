@@ -21,9 +21,25 @@ SCRIPT_ARGS="$@"
 
 process_args "$@"
 
+SED_FOLDER=
+
+parse_config (){
+	# $1) full path to .fkeepconfig
+	SED_FOLDER=$(dirname $1)
+}
+
 read_upper_config() {
 	# Read any config file found in directories above this one
-	echo -n
+	pushd $(pwd -P) > /dev/null
+		rval=$?
+		while [[ $rval -eq 0 && $(pwd -P) != "/" ]]; do
+			if [[ -e .fkeepconfig ]]; then
+				parse_config $(pwd -P)/.fkeepconfig
+			fi
+			cd ..
+			rval=$?
+		done
+	popd > /dev/null
 }
 
 read_upper_config

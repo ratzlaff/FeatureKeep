@@ -72,6 +72,16 @@ run_test() {
 	./fkeep.sh > log/fkeep.sh.log
 }
 
+filter_outputs() {
+	if [[ -e key/fkeep.sh.log ]]; then
+		sed -f ${SED_FOLDER}/fkeep.sh.sed key/fkeep.sh.log > key/fkeep.sh.logf
+	fi
+
+	if [[ -e log/fkeep.sh.log ]]; then
+		sed -f ${SED_FOLDER}/fkeep.sh.sed log/fkeep.sh.log > log/fkeep.sh.logf
+	fi
+}
+
 compare_files() {
 	# $1) file from key/
 	# $2) file from log/
@@ -94,12 +104,13 @@ compare_outputs() {
 		if [[ $file =~ ^.*key/(.*)$ ]]; then
 			keyFile=${BASH_REMATCH[1]}
 			if [[ -f log/$keyFile ]]; then
+				[[ -f log/${keyFile}f ]] && keyFile=${keyFile}f
 				if [[ -z "$compared_files" ]]; then
 					compared_files="$keyFile"
 				else
 					local foundItm=0
 					for itm in $compared_files; do
-						if [[ "$itm" == "$logFile" ]]; then
+						if [[ "$itm" == "$keyFile" ]]; then
 							foundItm=1
 						fi
 					done
@@ -118,11 +129,12 @@ compare_outputs() {
 		fi
 	done
 	fi
-	
+
 	for file in $(find log -type f); do
 		if [[ $file =~ ^.*log/(.*)$ ]]; then
 			logFile=${BASH_REMATCH[1]}
 			if [[ -f key/$logFile ]]; then
+				[[ -f key/${logFile}f ]] && logFile=${logFile}f
 				if [[ -z "$compared_files" ]]; then
 					compared_files="$logFile"
 				else
@@ -148,7 +160,12 @@ compare_outputs() {
 	done
 
 	for itm in $compared_files; do
+		if [[ -e key/${itm}f && -e log/${itm}f ]]; then
+			itm=${itm}f
+		fi
+
 		diff key/$itm log/$itm > /dev/null
+
 		if [[ $? -ne 0 ]]; then
 			[[ $rval -eq 0 ]] && echo
 			echo "  files differ: log/$itm key/$itm"
@@ -187,7 +204,7 @@ test_dir() {
 		if [[ $rval -ne 0 ]]; then
 			echo $rval > log/fkeep.result
 		fi
-
+		filter_outputs
 		compare_outputs
 		if [[ $? -ne 0 ]]; then
 			rval=1
