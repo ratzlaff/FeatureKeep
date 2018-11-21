@@ -120,12 +120,14 @@ compare_outputs() {
 					fi
 				fi
 			else
-				[[ $rval -eq 0 ]] && echo
+				[[ $rval -eq 0 ]] && echo "${red}Failed${normal}"
 				echo "  key/$keyFile exists but log/$keyFile does not"
 				rval=1
 			fi
 		else
+			[[ $rval -eq 0 ]] && echo "${red}Failed${normal}"
 			errorMessage "key/log regex error"
+			rval=1
 		fi
 	done
 	fi
@@ -150,12 +152,14 @@ compare_outputs() {
 					fi
 				fi
 			else
-				[[ $rval -eq 0 ]] && echo
+				[[ $rval -eq 0 ]] && echo "${red}Failed${normal}"
 				echo "  log/$logFile exists but key/$logFile does not"
 				rval=1
 			fi
 		else
+			[[ $rval -eq 0 ]] && echo "${red}Failed${normal}"
 			errorMessage "log/key regex error"
+			rval=1
 		fi
 	done
 
@@ -167,7 +171,7 @@ compare_outputs() {
 		diff key/$itm log/$itm > /dev/null
 
 		if [[ $? -ne 0 ]]; then
-			[[ $rval -eq 0 ]] && echo
+			[[ $rval -eq 0 ]] && echo "${red}Failed${normal}"
 			echo "  files differ: log/$itm key/$itm"
 			rval=1
 		fi
@@ -212,7 +216,6 @@ test_dir() {
 
 		if [[ $rval -ne 0 ]]; then
 			num_failed=$(( $num_failed + 1 ))
-			echo "${red}Failed${normal}"
 		else
 			num_passed=$(( $num_passed + 1 ))
 			echo "${green}Passed${normal}"

@@ -1,3 +1,2 @@
-Running test no_key ... 
+Running test no_key ... Failed
   log/output.txt exists but key/output.txt does not
-Failed

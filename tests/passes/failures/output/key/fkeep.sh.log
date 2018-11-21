@@ -1,3 +1,2 @@
-Running test output ... 
+Running test output ... Failed
   files differ: log/fkeep.sh.logf key/fkeep.sh.logf
-Failed
