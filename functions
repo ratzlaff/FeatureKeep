@@ -226,9 +226,10 @@ test_dir() {
 		return 0
 	fi
 
-	for dir in $(find . -type d -maxdepth 1); do
+	for dir in $(find . -maxdepth 1 -type d); do
 		if [[ $dir != "." && $dir != "./log" && $dir != "./key" ]]; then
 			pushd $dir > /dev/null
+				[[ $? -ne 0 ]] && echo "ERROR: unable to change directory to $dir" && exit 1
 #				echo "> $(pwd -P)"
 				test_dir ${testName}/$(basename $dir)
 			popd > /dev/null

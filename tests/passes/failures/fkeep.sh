@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for failTest in $(find ../../fails -type d -depth 1); do
+for failTest in $(find ../../fails -maxdepth 1 -type d); do
 	dir=$(basename $failTest)
 
 	if [[ ! -d $dir ]]; then
